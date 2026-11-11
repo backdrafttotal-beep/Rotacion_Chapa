@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<meta name="color-scheme" content="light dark">
+<script>
+  try{ if(localStorage.getItem("tema_app") === "claro") document.documentElement.classList.add("claro"); }catch(e){}
+</script>
+<title>Puestos de Trabajo</title>
+<style>
+  :root{
+    color-scheme:dark;
+    --bg:#14171c; --bg-2:#171b21; --bg-rgb:20,23,28;
+    --panel:#1c2129; --panel-2:#232a34; --line:#323a46;
+    --amber:#e8a23d; --amber-dim:#7a5a26; --on-amber:#141414;
+    --text:#eef1f5; --text-dim:#98a3b3;
+    --green:#4caf7d; --red:#ff5a5a; --radius:10px;
+  }
+  html.claro{
+    color-scheme:light;
+    --bg:#f2f5f9; --bg-2:#ffffff; --bg-rgb:242,245,249;
+    --panel:#ffffff; --panel-2:#e9edf3; --line:#c4cdd9;
+    --amber:#9a4300; --amber-dim:#e3b574; --on-amber:#ffffff;
+    --text:#000000; --text-dim:#242a33;
+    --green:#1b7a4a; --red:#c01c1c;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  body{padding-bottom:110px;}
+
+  header{
+    position:sticky;top:0;z-index:20;
+    background:linear-gradient(180deg,var(--bg-2),var(--bg) 90%);
+    border-bottom:2px solid var(--amber-dim);
+    padding:14px 16px 12px;padding-right:64px;
+  }
+  header h1{margin:0 0 2px;font-size:17px;letter-spacing:.3px;font-weight:700;}
+  header .sub{font-size:12px;color:var(--text-dim);}
+  .tema-btn{
+    position:absolute;top:12px;right:14px;z-index:25;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:9px;
+    color:var(--text);font-size:15px;line-height:1;padding:7px 10px;cursor:pointer;
+  }
+
+  .meta{padding:12px 12px 0;}
+  .sem-sel{display:flex;align-items:stretch;gap:7px;}
+  .flecha{
+    flex:none;width:44px;background:var(--panel);border:1px solid var(--line);border-radius:9px;
+    color:var(--text);font-size:22px;line-height:1;font-weight:700;cursor:pointer;padding:0;
+  }
+  .flecha:active{background:var(--panel-2);}
+  .sem-centro{
+    flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);
+    border-radius:9px;padding:9px 10px;text-align:center;
+  }
+  .rot-wrap{position:relative;}
+  #rotuloSemana{font-size:15px;font-weight:800;letter-spacing:.2px;}
+  .rot-wrap input[type=date]{
+    position:absolute;top:-9px;left:-10px;right:-10px;bottom:-9px;
+    width:calc(100% + 20px);height:calc(100% + 18px);
+    opacity:0;border:none;padding:0;margin:0;background:transparent;cursor:pointer;
+  }
+  .hoy-btn{
+    display:none;width:100%;margin-top:7px;background:transparent;border:1px dashed var(--amber-dim);
+    color:var(--amber);border-radius:9px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;
+  }
+  .hoy-btn.ver{display:block;}
+
+  .semana{margin-top:3px;font-size:11px;font-weight:700;color:var(--amber);letter-spacing:.2px;}
+  .semana.suelta{color:var(--red);}
+  .turnos{display:flex;gap:5px;margin-top:10px;}
+  .turno-btn{
+    flex:1;min-width:0;border:1px solid var(--line);background:var(--panel);
+    color:var(--text-dim);font-size:10.5px;font-weight:800;letter-spacing:.2px;
+    border-radius:9px;padding:10px 2px;cursor:pointer;white-space:nowrap;
+  }
+  .turno-btn.activo{background:var(--amber-dim);color:var(--text);border-color:var(--amber);}
+  .turno-btn small{display:block;font-weight:600;font-size:9.5px;opacity:.8;margin-top:2px;}
+
+  .rejilla{padding:14px 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  table.rej{border-collapse:separate;border-spacing:0;font-size:12px;}
+  table.rej th, table.rej td{padding:0;}
+  table.rej thead th{
+    font-size:11px;font-weight:800;color:var(--text-dim);text-transform:uppercase;
+    padding:0 4px 6px;text-align:center;
+  }
+  table.rej thead th small{display:block;font-size:10px;font-weight:700;opacity:.75;}
+  table.rej thead th.hoy{color:var(--amber);}
+  th.lado{
+    position:sticky;left:0;z-index:2;background:var(--bg);
+    text-align:left;font-size:10.5px;font-weight:800;letter-spacing:.4px;
+    color:var(--amber);text-transform:uppercase;
+    padding:0 8px 0 12px;min-width:84px;max-width:84px;white-space:normal;line-height:1.15;
+  }
+  tr.jefe-fila th.lado{border-left:4px solid var(--amber);padding-left:8px;}
+  table.rej td{padding:0 3px 6px;}
+  table.rej td:last-child{padding-right:12px;}
+  table.rej select{
+    width:100%;min-width:86px;font-size:11.5px;font-weight:700;padding:9px 3px;
+    border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--text);
+  }
+  table.rej td.vacia select{color:var(--text-dim);font-weight:600;}
+  input.cel-libre{
+    width:100%;min-width:86px;font-size:11.5px;font-weight:700;padding:9px 6px;
+    border-radius:8px;border:1px solid var(--amber);background:var(--panel-2);color:var(--text);
+  }
+  input.cel-libre:focus{outline:none;}
+  table.rej td.rep select{border-color:var(--red);color:var(--red);}
+  table.rej td.hoy select{border-color:var(--amber-dim);}
+  table.rej.pocos{width:100%;}
+  table.rej.pocos select, table.rej.pocos input.cel-libre{min-width:0;font-size:13px;padding:11px 4px;}
+  .pista{padding:8px 12px 0;font-size:11px;color:var(--text-dim);}
+
+  select:focus{outline:none;border-color:var(--amber);}
+
+  .barra{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;
+    background:linear-gradient(0deg,var(--bg) 70%, rgba(var(--bg-rgb),0));
+    padding:10px 12px 14px;
+  }
+  .barra-in{
+    display:flex;gap:8px;align-items:center;
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:9px 10px;
+  }
+  .cuenta{flex:1;font-size:11px;color:var(--text-dim);line-height:1.35;}
+  .cuenta b{color:var(--text);font-size:15px;display:block;}
+  .btn{border:1px solid var(--line);background:var(--panel-2);color:var(--text);
+    border-radius:10px;padding:11px 12px;font-size:14px;font-weight:700;cursor:pointer;}
+
+  .plegable{margin:14px 12px 0;}
+  .plegable > button{
+    width:100%;background:transparent;border:1px dashed var(--amber-dim);color:var(--amber);
+    border-radius:9px;padding:10px;font-size:12.5px;font-weight:700;cursor:pointer;
+  }
+  .caja{
+    display:none;background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius);padding:12px;margin-top:9px;
+  }
+  .caja.abierta{display:block;}
+  .caja h3{margin:0 0 8px;font-size:12px;letter-spacing:.5px;color:var(--text-dim);text-transform:uppercase;}
+  #quienFicha{
+    width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;
+    color:var(--text);padding:11px 10px;font-size:14px;font-weight:700;
+  }
+  #quienFicha:focus{outline:none;border-color:var(--amber);}
+  .ficha-tot{margin:11px 0 9px;font-size:12.5px;color:var(--text-dim);line-height:1.5;}
+  .ficha-tot b{color:var(--text);font-size:15px;}
+  .barra-p{margin-bottom:7px;}
+  .barra-p .et{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;}
+  .barra-p .et span:first-child{font-weight:700;}
+  .barra-p .et span:last-child{color:var(--text-dim);font-weight:700;}
+  .barra-p .tubo{height:7px;background:var(--panel-2);border-radius:4px;overflow:hidden;}
+  .barra-p .relleno{height:100%;background:var(--amber);border-radius:4px;}
+  .ficha-sub{margin:12px 0 6px;font-size:10.5px;letter-spacing:.5px;color:var(--text-dim);text-transform:uppercase;font-weight:800;}
+  .ultimos{font-size:12.5px;line-height:1.65;}
+  .ultimos div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:4px 0;}
+  .ultimos div:last-child{border-bottom:none;}
+  .ultimos .f{color:var(--text-dim);white-space:nowrap;}
+  .ope{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px;}
+  .ope:last-child{border-bottom:none;}
+  .ope span{flex:1;}
+  .ope .cat{flex:none;font-size:10.5px;color:var(--text-dim);font-weight:700;text-transform:uppercase;}
+  .ope .cat.jefe-cat{color:var(--amber);}
+  .dia{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);}
+  .dia:last-child{border-bottom:none;}
+  .dia > button.abrir{
+    flex:1;text-align:left;background:transparent;border:none;color:var(--text);
+    font-size:14px;font-weight:700;cursor:pointer;padding:0;
+  }
+  .dia .turnos-dia{display:block;font-size:11px;color:var(--text-dim);font-weight:600;margin-top:2px;}
+  .dia.hoy > button.abrir{color:var(--amber);}
+  .dia .borrar{flex:none;background:transparent;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:2px 6px;}
+  .vacio{font-size:13px;color:var(--text-dim);padding:6px 0;}
+  .ope button{flex:none;background:transparent;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:2px 6px;}
+  .anadir{display:flex;gap:8px;margin-top:10px;}
+  .anadir input{
+    flex:1;min-width:0;background:var(--panel-2);border:1px solid var(--line);
+    border-radius:9px;color:var(--text);padding:11px 10px;font-size:14px;
+  }
+  .anadir input:focus{outline:none;border-color:var(--amber);}
+  .anadir button{
+    flex:none;background:var(--amber);color:var(--on-amber);border:none;border-radius:9px;
+    padding:0 16px;font-size:14px;font-weight:800;cursor:pointer;
+  }
+  .excel{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
+  .excel p{margin:0 0 8px;font-size:11.5px;color:var(--text-dim);line-height:1.45;}
+  .excel input[type=file]{font-size:12px;color:var(--text-dim);width:100%;}
+
+  .toast{
+    position:fixed;left:50%;bottom:92px;transform:translateX(-50%) translateY(20px);
+    background:var(--panel-2);border:1px solid var(--amber-dim);color:var(--text);
+    padding:10px 18px;border-radius:20px;font-size:12.5px;font-weight:700;
+    opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:40;
+    max-width:88%;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<header>
+  <button class="tema-btn" id="temaBtn" aria-label="Cambiar fondo">&#9728;&#65039;</button>
+  <h1>Puestos de Trabajo</h1>
+  <div class="sub" id="subt">CHAPA · se guarda solo en este teléfono · <b>v16-11</b></div>
+</header>
+
+<div class="meta">
+  <div class="sem-sel">
+    <button class="flecha" data-mover="-1" aria-label="Semana anterior">&#8249;</button>
+    <div class="sem-centro">
+      <div class="rot-wrap">
+        <div id="rotuloSemana">&nbsp;</div>
+        <input type="date" id="fecha" aria-label="Elegir semana">
+      </div>
+      <div class="semana" id="semana"></div>
+    </div>
+    <button class="flecha" data-mover="1" aria-label="Semana siguiente">&#8250;</button>
+  </div>
+  <button class="hoy-btn" id="irHoy">Ir a la semana de hoy</button>
+  <div class="turnos" id="turnos">
+    <button class="turno-btn" data-t="A">TURNO A<small>Tarde</small></button>
+    <button class="turno-btn" data-t="B">TURNO B<small>Mañana</small></button>
+    <button class="turno-btn" data-t="C">TURNO C<small>Noche</small></button>
+    <button class="turno-btn" data-t="FS">FS<small>Finde</small></button>
+  </div>
+</div>
+
+<div class="rejilla" id="rejilla"></div>
+
+<div class="plegable">
+  <button id="verDias">Días guardados</button>
+  <div class="caja" id="cajaDias">
+    <h3>Este año</h3>
+    <div id="listaDias"></div>
+  </div>
+</div>
+
+<div class="plegable">
+  <button id="verFicha">Resumen por operario</button>
+  <div class="caja" id="cajaFicha">
+    <h3>Dónde ha estado este año</h3>
+    <select id="quienFicha"></select>
+    <div id="ficha"></div>
+  </div>
+</div>
+
+<div class="plegable">
+  <button id="verOperarios">Operarios del turno</button>
+  <div class="caja" id="cajaOperarios">
+    <h3 id="tituloLista">Lista</h3>
+    <div id="listaOperarios"></div>
+    <div class="anadir">
+      <input type="text" id="nuevoOperario" placeholder="Añadir a mano (ETT, refuerzo…)" autocomplete="off">
+      <button id="btnAnadir">Añadir</button>
+    </div>
+    <div class="excel">
+      <p>Para cambiar de semana, carga aquí el Excel de turnos. La app lee los
+         tres turnos y se queda con los que estén en <b>CHAPA</b>.</p>
+      <input type="file" id="ficheroExcel" accept=".xlsx,.xlsm,.xls">
+    </div>
+  </div>
+</div>
+
+<div class="barra">
+  <div class="barra-in">
+    <div class="cuenta"><b id="puestosLlenos">0 / 10</b><span id="piePuestos">puestos cubiertos</span></div>
+    <button class="btn" id="vaciarBtn" title="Vaciar los puestos">&#128465; Vaciar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------- PUESTOS ----------
+// El capataz va el primero: es lo primero que se mira.
+const PUESTOS = ["Capataz","Almacén 1","Almacén 2","Apoyo","Ruta 2","Ruta 5","Ruta 11","Ruta 7","Ruta 8","Fábrica 1"];
+const TURNOS = ["A","B","C","FS"];
+// Las letras rotan cada semana: el horario de cada turno lo dice el Excel,
+// al lado de "TURNO X". Si falta, se calcula rotando desde la última semana
+// conocida: Mañana -> Noche -> Tarde -> Mañana.
+const RUEDA = ["Mañana", "Noche", "Tarde"];
+const HORARIO_INICIAL = { A:"Tarde", B:"Mañana", C:"Noche" };   // KW45
+function normHorario(t){
+  const v = sinTildes(t).replace(/[^A-Z]/g,"");
+  if(v.indexOf("MANAN") === 0) return "Mañana";
+  if(v.indexOf("TARDE") === 0) return "Tarde";
+  if(v.indexOf("NOCHE") === 0) return "Noche";
+  return "";
+}
+function semanasEntre(a, b){
+  return Math.round((new Date(b + "T00:00:00") - new Date(a + "T00:00:00")) / 604800000);
+}
+function horarioDe(t, f){
+  if(t === "FS") return "Fin de semana";
+  const L = lunesDe(f || state.fecha);
+  const propia = state.semanas[L];
+  if(propia && propia.horario && propia.horario[t]) return propia.horario[t];
+  // la semana conocida más cercana, y se rota tantas semanas como haya
+  const ks = Object.keys(state.semanas).filter(k=> state.semanas[k].horario && state.semanas[k].horario[t]).sort();
+  if(!ks.length) return "";
+  const antes = ks.filter(k=> k < L);
+  const base = antes.length ? antes[antes.length-1] : ks[0];
+  const i = RUEDA.indexOf(state.semanas[base].horario[t]);
+  if(i === -1) return "";
+  const n = semanasEntre(base, L);
+  return RUEDA[(((i + n) % 3) + 3) % 3];
+}
+
+// Gente de CHAPA de cada turno, tal como viene en el Excel de la semana KW45.
+// Quien tiene categoría "Capataz" es el que sale primero en ese puesto.
+const GENTE_INICIAL = {
+  A: [
+    { n:"Sandra Diaz Echavarri",       c:"Capataz" },
+    { n:"Sergio Enderiz Guardia",      c:"Carretillero" },
+    { n:"Francisco Sanchez",           c:"Carretillero" },
+    { n:"Iker Alonso Reparaz",         c:"Carretillero" },
+    { n:"Jonathan Suarez Cabal",       c:"Carretillero" },
+    { n:"Juan Jesús Maestre Lasheras", c:"Carretillero" },
+    { n:"Carlos Moreno Zudaire",       c:"Carretillero" },
+    { n:"Jose Maria Azcune",           c:"Carretillero" },
+    { n:"Carlos Narvaez",              c:"Carretillero" }
+  ],
+  B: [
+    { n:"Pedro Garcia Chavero",        c:"Capataz" },
+    { n:"Iñigo Arraiza de la Torre",   c:"Carretillero" },
+    { n:"Manolo Anguita",              c:"Carretillero" },
+    { n:"Ivan Hernandez Castañon",     c:"Carretillero" },
+    { n:"Angel Ibero Castro",          c:"Carretillero" },
+    { n:"Oscar Catalán",               c:"Carretillero" },
+    { n:"Sebastián Cardona Zuluaga",   c:"Carretillero" },
+    { n:"Miguel Navarro Jimenez",      c:"Carretillero" },
+    { n:"David Iralde Sepúlveda",      c:"Carretillero" },
+    { n:"Sergio Martinez Blanco",      c:"" }
+  ],
+  C: [
+    { n:"Fernando Marin Molina",       c:"Capataz" },
+    { n:"Beatriz Munarriz",            c:"Carretillero" },
+    { n:"Pavel Yordanov",              c:"Carretillero" },
+    { n:"Javier Ezcurra",              c:"Carretillero" },
+    { n:"Pablo Diaz de Rada Sola",     c:"Carretillero" },
+    { n:"John Alex Garcia Castellano", c:"Carretillero" },
+    { n:"Iñigo Magallón Huarte",       c:"Carretillero" },
+    { n:"Daniel Casas González",       c:"Carretillero" }
+  ]
+};
+
+const STORAGE_KEY = "puestos_trabajo_v2";
+function vacioPorTurno(){ const o = {}; TURNOS.forEach(t=> o[t] = {}); return o; }
+// El fin de semana no viene en el Excel: se ofrece a todo el mundo de esa
+// semana, de los tres turnos, y luego se apunta quien venga.
+function mezclaTurnos(g){
+  const fuera = [];
+  ["B","A","C"].forEach(t=> (g[t] || []).forEach(p=>{
+    if(!fuera.some(x=> sinTildes(x.n) === sinTildes(p.n))) fuera.push({ n:p.n, c:p.c });
+  }));
+  return fuera;
+}
+// Los Excel son semanales, así que cada semana guarda su propia plantilla.
+// La clave es el lunes de esa semana.
+const SEMANA_INICIAL = (function(){
+  const g = JSON.parse(JSON.stringify(GENTE_INICIAL));
+  g.FS = mezclaTurnos(g);
+  return { "2026-11-02": { kw:"KW45", desde:"2026-11-02", hasta:"2026-11-08",
+                           horario: Object.assign({}, HORARIO_INICIAL), gente:g } };
+})();
+let state = {
+  fecha:"", turno:"B",
+  semanas: JSON.parse(JSON.stringify(SEMANA_INICIAL)),
+  hist: {},                  // { "2026-11-06": { A:{puesto:nombre}, B:{...}, C:{...} } }
+  libre: vacioPorTurno(),
+  auto: {}                   // { "2026-11-06|B":true } turnos a los que ya se puso el capataz
+};
+
+// ---------- GUARDADO ----------
+let STORAGE_OK = false;
+(function probar(){
+  try{
+    const p = STORAGE_KEY + "__probe";
+    localStorage.setItem(p,"1"); STORAGE_OK = localStorage.getItem(p) === "1"; localStorage.removeItem(p);
+  }catch(e){ STORAGE_OK = false; }
+})();
+function saveState(){
+  limpiarHistorial();
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+}
+// Un día solo se archiva si tiene algo puesto aparte del capataz automático.
+function hayAlgo(f){
+  const d = state.hist[f];
+  if(!d) return false;
+  return TURNOS.some(t=>{
+    const A = d[t] || {};
+    return PUESTOS.some(p=>{
+      const v = (A[p] || "").trim();
+      if(!v) return false;
+      if(p !== "Capataz" || t === "FS") return true;
+      const jefe = genteDe(f, t).filter(esCapataz)[0];
+      return !jefe || jefe.n !== v;
+    });
+  });
+}
+// Se guarda el año natural: del 1 de enero al 31 de diciembre. Al entrar el
+// año nuevo se borra lo del anterior.
+function limpiarHistorial(){
+  const anio = new Date().getFullYear();
+  const viendo = diasDeLaSemana(state.fecha);   // la semana abierta no se toca nunca
+  Object.keys(state.hist).forEach(f=>{
+    if(viendo.indexOf(f) !== -1) return;
+    if(parseInt(f.slice(0,4), 10) < anio || !hayAlgo(f)) delete state.hist[f];
+  });
+  // De las plantillas se queda la semana que toque el año en curso, y nunca
+  // se borra la última: si no, la app se quedaría sin nombres.
+  const sem = Object.keys(state.semanas).sort();
+  const ultima = sem[sem.length - 1];
+  sem.forEach(L=>{
+    if(L === ultima) return;
+    const dom = new Date(L + "T00:00:00");
+    dom.setDate(dom.getDate() + 6);
+    if(dom.getFullYear() < anio) delete state.semanas[L];
+  });
+  Object.keys(state.auto).forEach(k=>{
+    const f = k.split("|")[0];
+    if(f !== state.fecha && !state.hist[f]) delete state.auto[k];
+  });
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const s = JSON.parse(raw);
+    if(!s || typeof s !== "object") return;
+    state.fecha = s.fecha || "";
+    if(TURNOS.indexOf(s.turno) !== -1) state.turno = s.turno;
+    if(s.semanas && typeof s.semanas === "object" && Object.keys(s.semanas).length) state.semanas = s.semanas;
+    // versiones anteriores guardaban una sola plantilla, sin semana
+    else if(s.gente){
+      const L = lunesDe(s.fecha || fechaHoy());
+      const g = vacioPorTurno();
+      TURNOS.forEach(t=>{ g[t] = Array.isArray(s.gente[t]) ? s.gente[t] : []; });
+      state.semanas = {}; state.semanas[L] = { kw:"", desde:L, hasta:"", gente:g };
+    }
+    if(s.hist && typeof s.hist === "object") state.hist = s.hist;
+    // versiones anteriores guardaban un único reparto sin fecha
+    if(s.asig && !s.hist && state.fecha){
+      state.hist[state.fecha] = vacioPorTurno();
+      TURNOS.forEach(t=>{ if(s.asig[t]) state.hist[state.fecha][t] = s.asig[t]; });
+    }
+    if(s.libre) TURNOS.forEach(t=>{ if(s.libre[t]) state.libre[t] = s.libre[t]; });
+    if(s.auto && !Array.isArray(s.auto) && typeof s.auto === "object"){
+      Object.keys(s.auto).forEach(k=>{ if(k.indexOf("|") !== -1) state.auto[k] = !!s.auto[k]; });
+    }
+  }catch(e){}
+}
+window.addEventListener("pagehide", saveState);
+window.addEventListener("beforeunload", saveState);
+document.addEventListener("visibilitychange", ()=>{ if(document.hidden) saveState(); });
+
+// ---------- AVISOS ----------
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.onclick = null; t.style.pointerEvents = "none";
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(()=> t.classList.remove("show"), 2800);
+}
+// Un aviso que se puede tocar para hacer algo.
+function toastAccion(msg, fn, segundos){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  t.style.pointerEvents = "auto";
+  t.onclick = ()=>{
+    t.onclick = null; t.style.pointerEvents = "none"; t.classList.remove("show");
+    fn();
+  };
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(()=>{
+    t.classList.remove("show"); t.style.pointerEvents = "none"; t.onclick = null;
+  }, (segundos || 7) * 1000);
+}
+
+// ---------- FONDO CLARO U OSCURO ----------
+const TEMA_KEY = "tema_app";
+let temaActual = "oscuro";
+try{ temaActual = localStorage.getItem(TEMA_KEY) || "oscuro"; }catch(e){}
+function aplicarTema(){
+  const claro = temaActual === "claro";
+  document.documentElement.classList.toggle("claro", claro);
+  document.getElementById("temaBtn").textContent = claro ? "\u{1F319}" : "☀️";
+}
+aplicarTema();
+document.getElementById("temaBtn").addEventListener("click", ()=>{
+  temaActual = (temaActual === "claro") ? "oscuro" : "claro";
+  try{ localStorage.setItem(TEMA_KEY, temaActual); }catch(e){}
+  aplicarTema();
+});
+
+// ---------- UTILIDADES ----------
+function fechaHoy(){
+  const d = new Date(), p = n=> String(n).padStart(2,"0");
+  return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate());
+}
+function sinTildes(s){
+  return String(s == null ? "" : s).normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().trim();
+}
+function esCapataz(p){ return sinTildes(p.c).indexOf("CAPATAZ") === 0; }
+// Estos dos llevan la oficina: salen en la lista del turno, pero nunca en
+// los puestos de ruta ni de almacén.
+const OFICINA = ["Iñigo Arraiza de la Torre", "Sergio Martinez Blanco"];
+function esOficina(p){
+  if(sinTildes(p.c).indexOf("OFICIN") !== -1) return true;
+  return OFICINA.some(n=> sinTildes(n) === sinTildes(p.n));
+}
+// Todo el que no sea ni capataz ni oficina es carretillero.
+function categoria(p){
+  if(esCapataz(p)) return "Capataz";
+  if(esOficina(p)) return "Oficina";
+  const c = String(p.c || "").trim();
+  return c ? c : "Carretillero";
+}
+function ordenPlantilla(a, b){
+  const peso = p=> esCapataz(p) ? 0 : (esOficina(p) ? 1 : 2);
+  return peso(a) - peso(b);
+}
+// "Apellidos, Nombre" -> "Nombre Apellidos"
+function darLaVuelta(s){
+  const t = String(s||"").trim().replace(/\s+/g," ");
+  const i = t.indexOf(",");
+  if(i === -1) return t;
+  const ape = t.slice(0,i).trim(), nom = t.slice(i+1).trim().replace(/,$/,"").trim();
+  return (nom && ape) ? (nom + " " + ape) : t;
+}
+
+function lunesDe(f){
+  const d = new Date(f + "T00:00:00");
+  if(isNaN(d)) return f;
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  const p = n=> String(n).padStart(2,"0");
+  return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate());
+}
+// La plantilla de la semana de esa fecha. Si esa semana no se ha cargado,
+// se tira de la última anterior que haya, para no quedarse sin nombres.
+function conFS(s){
+  if(s && s.gente && (!s.gente.FS || !s.gente.FS.length)) s.gente.FS = mezclaTurnos(s.gente);
+  return s;
+}
+function semanaDe(f){
+  const L = lunesDe(f || state.fecha);
+  if(state.semanas[L]) return conFS(state.semanas[L]);
+  const ks = Object.keys(state.semanas).sort();
+  if(!ks.length) return null;
+  const antes = ks.filter(k=> k < L);
+  return conFS(state.semanas[antes.length ? antes[antes.length-1] : ks[ks.length-1]]);
+}
+function esSuSemana(f){ return !!state.semanas[lunesDe(f || state.fecha)]; }
+// Para añadir o quitar gente: si la semana del día no está cargada, se crea
+// copiando la que se estaba usando, y así no se toca la de otra semana.
+// Apunta a alguien en el turno que se esté viendo; si no es el finde, también
+// se suma a la lista del finde, que es la mezcla de todos.
+function apuntarEnPlantilla(nombre, cat){
+  const sem = semanaEditable();
+  const mete = t=>{
+    const l = sem.gente[t] || (sem.gente[t] = []);
+    if(!l.some(x=> sinTildes(x.n) === sinTildes(nombre))) l.push({ n:nombre, c:cat || "ETT" });
+  };
+  mete(state.turno);
+  if(state.turno !== "FS") mete("FS");
+}
+function semanaEditable(){
+  const L = lunesDe(state.fecha);
+  if(!state.semanas[L]){
+    const base = semanaDe(state.fecha);
+    state.semanas[L] = { kw:"", desde:L, hasta:"",
+      gente: base ? JSON.parse(JSON.stringify(base.gente)) : vacioPorTurno() };
+  }
+  return state.semanas[L];
+}
+function genteDe(f, t){
+  const s = semanaDe(f);
+  return (s && s.gente && s.gente[t]) || [];
+}
+function gente(){ return genteDe(state.fecha, state.turno); }
+function dia(f){
+  f = f || state.fecha;
+  if(!state.hist[f]) state.hist[f] = vacioPorTurno();
+  return state.hist[f];
+}
+function asig(f, t){
+  const d = dia(f);
+  t = t || state.turno;
+  return d[t] || (d[t] = {});
+}
+function libre(){ return state.libre[state.turno] || (state.libre[state.turno] = {}); }
+
+// En CAPATAZ solo sale quien el Excel marca como capataz de ese turno.
+// Si algún día lo lleva otro, se escribe a mano con el lápiz.
+function opcionesPara(puesto){
+  const g = gente();
+  if(puesto === "Capataz") return g.filter(esCapataz).map(p=>p.n);
+  return g.filter(p=> !esCapataz(p) && !esOficina(p)).map(p=>p.n);
+}
+
+// El capataz del turno se pone solo al entrar, al cambiar de turno y al
+// cargar el Excel. Si lo cambias a mano, se respeta lo que hayas puesto.
+function autoCapataz(t, forzar){ return autoCapatazDe(state.fecha, t, forzar); }
+function autoCapatazDe(fecha, t, forzar){
+  t = (typeof t === "string" && TURNOS.indexOf(t) !== -1) ? t : state.turno;
+  if(t === "FS") return;   // el finde lo pone quien lo lleve
+  const clave = fecha + "|" + t;
+  if(!forzar && state.auto[clave]) return;   // ya se puso una vez ese día: no insistir
+  state.auto[clave] = true;
+  const A = asig(fecha, t);
+  if((A["Capataz"] || "").trim()) return;
+  if((state.libre[t] || {})["Capataz"]) return;
+  const jefe = genteDe(fecha, t).filter(esCapataz)[0];
+  if(jefe) A["Capataz"] = jefe.n;
+}
+
+// ---------- PINTAR ----------
+function diaMes(f){
+  const d = new Date(f + "T00:00:00");
+  if(isNaN(d)) return f;
+  const mes = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+  return d.getDate() + " " + mes[d.getMonth()];
+}
+const DIASEM = ["lunes","martes","miércoles","jueves","viernes","sábado","domingo"];
+function rotuloSemana(f){
+  const d = diasDeLaSemana(f);
+  const a = new Date(d[0] + "T00:00:00"), b = new Date(d[6] + "T00:00:00");
+  const mes = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+  const mismoMes = a.getMonth() === b.getMonth();
+  return "lunes " + a.getDate() + (mismoMes ? "" : " " + mes[a.getMonth()]) +
+         " - domingo " + b.getDate() + " " + mes[b.getMonth()];
+}
+function pintarSemana(){
+  document.getElementById("rotuloSemana").textContent = rotuloSemana(state.fecha);
+  document.getElementById("irHoy").classList.toggle("ver", lunesDe(state.fecha) !== lunesDe(fechaHoy()));
+  const el = document.getElementById("semana");
+  const s = semanaDe(state.fecha);
+  const propia = esSuSemana(state.fecha);
+  if(!s){ el.textContent = "Sin plantilla · carga el Excel de la semana"; el.className = "semana suelta"; return; }
+  const rango = s.desde ? (diaMes(s.desde) + (s.hasta ? " a " + diaMes(s.hasta) : "")) : "";
+  const nombre = (s.kw || "Semana") + (rango ? " · " + rango : "");
+  el.className = "semana" + (propia ? "" : " suelta");
+  el.textContent = propia ? (s.kw || "Plantilla cargada")
+                          : "\u26A0\uFE0F Sin Excel de esta semana · se usa " + nombre;
+}
+function render(){
+  document.querySelectorAll(".turno-btn").forEach(b=>{
+    b.classList.toggle("activo", b.dataset.t === state.turno);
+    const peq = b.querySelector("small");
+    if(peq && b.dataset.t !== "FS") peq.textContent = horarioDe(b.dataset.t) || "—";
+  });
+  pintarSemana();
+  document.getElementById("subt").innerHTML = STORAGE_OK
+    ? ("CHAPA · Turno " + state.turno + (horarioDe(state.turno) ? " (" + horarioDe(state.turno) + ")" : "") + " · <b>v16-11</b>")
+    : "\u26A0\uFE0F ESTE NAVEGADOR NO GUARDA LOS DATOS · apúntalos antes de salir";
+  renderRejilla();
+  contar();
+  if(document.getElementById("cajaOperarios").classList.contains("abierta")) renderOperarios();
+  if(document.getElementById("cajaDias").classList.contains("abierta")) renderDias();
+  if(document.getElementById("cajaFicha").classList.contains("abierta")) renderQuien();
+}
+// ¿ese día tiene reparto de verdad, más allá del capataz automático?
+function repartido(f, t){
+  const A = (state.hist[f] || {})[t] || {};
+  return PUESTOS.some(p=> (p !== "Capataz" || t === "FS") && (A[p] || "").trim());
+}
+function contar(){
+  const v = diasVisibles();
+  const n = v.filter(f=> repartido(f, state.turno)).length;
+  document.getElementById("puestosLlenos").textContent = n + " / " + v.length;
+  document.getElementById("piePuestos").textContent = "días con reparto";
+}
+
+// Si la semana que se abre está vacía pero hay reparto en una anterior,
+// se avisa: no se ha borrado, está en su semana.
+function avisarSemanaAnterior(){
+  const estaSemana = diasDeLaSemana(state.fecha);
+  if(TURNOS.some(t=> estaSemana.some(f=> repartido(f, t)))) return;
+  const L = lunesDe(state.fecha);
+  const antes = Object.keys(state.hist)
+    .filter(f=> f < L && TURNOS.some(t=> repartido(f, t)))
+    .sort();
+  if(!antes.length) return;
+  const ultima = antes[antes.length - 1];
+  toastAccion("Semana nueva y vacía · lo de la semana del " + rotuloSemana(ultima) +
+              " sigue guardado · TOCA PARA VERLO", ()=> irASemana(ultima), 10);
+}
+
+// ---------- MOVERSE DE SEMANA ----------
+function irASemana(f){
+  state.fecha = lunesDe(f);
+  document.getElementById("fecha").value = state.fecha;
+  autoCapataz();
+  saveState(); render();
+}
+document.querySelectorAll("[data-mover]").forEach(b=>{
+  b.addEventListener("click", ()=>{
+    const d = new Date(lunesDe(state.fecha) + "T00:00:00");
+    d.setDate(d.getDate() + 7 * parseInt(b.dataset.mover, 10));
+    const p = n=> String(n).padStart(2,"0");
+    irASemana(d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate()));
+  });
+});
+document.getElementById("irHoy").addEventListener("click", ()=> irASemana(fechaHoy()));
+
+// ---------- CAMBIO DE TURNO ----------
+document.getElementById("turnos").addEventListener("click", e=>{
+  const b = e.target.closest(".turno-btn");
+  if(!b) return;
+  state.turno = b.dataset.t;
+  autoCapataz();
+  saveState(); render();
+  showToast("Turno " + state.turno + (horarioDe(state.turno) ? " · " + horarioDe(state.turno) : "") +
+            " · " + gente().length + " en CHAPA");
+});
+
+// ---------- VISTA DE LA SEMANA ----------
+const LETRAS = ["L","M","X","J","V","S","D"];
+function diasDeLaSemana(f){
+  const L = lunesDe(f || state.fecha), out = [];
+  const p = n=> String(n).padStart(2,"0");
+  for(let i = 0; i < 7; i++){
+    const d = new Date(L + "T00:00:00");
+    d.setDate(d.getDate() + i);
+    out.push(d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate()));
+  }
+  return out;
+}
+// Nombres cortos para que quepan en la rejilla, pero sin confundir a dos
+// que se llamen igual de nombre.
+function nombresCortos(lista){
+  const corto = {}, cuenta = {};
+  lista.forEach(n=>{
+    const pr = String(n).trim().split(/\s+/)[0];
+    cuenta[pr] = (cuenta[pr] || 0) + 1;
+  });
+  lista.forEach(n=>{
+    const t = String(n).trim().split(/\s+/);
+    corto[n] = (cuenta[t[0]] > 1 && t[1]) ? (t[0] + " " + t[1][0] + ".") : t[0];
+  });
+  return corto;
+}
+// El fin de semana solo tiene sábado y domingo.
+function diasVisibles(f){
+  const d = diasDeLaSemana(f || state.fecha);
+  return state.turno === "FS" ? d.slice(5) : d;
+}
+const rejillaEl = document.getElementById("rejilla");
+function renderRejilla(){
+  const dias = diasVisibles();
+  const desde = diasDeLaSemana(state.fecha).length - dias.length;   // 0, o 5 en el finde
+  const hoy = fechaHoy();
+  dias.forEach(f=> autoCapatazDe(f, state.turno));
+  const corto = nombresCortos(gente().map(p=>p.n));
+  const scroll = rejillaEl.scrollLeft;
+
+  // quién se repite dentro del mismo día
+  const rep = {};
+  dias.forEach(f=>{
+    const A = (state.hist[f] || {})[state.turno] || {}, c = {};
+    PUESTOS.forEach(p=>{ const v = sinTildes(A[p] || ""); if(v) c[v] = (c[v]||0)+1; });
+    PUESTOS.forEach(p=>{ const v = sinTildes(A[p] || ""); if(v && c[v] > 1) rep[f+"|"+p] = true; });
+  });
+
+  const cab = dias.map((f,i)=>{
+    const d = new Date(f + "T00:00:00");
+    return `<th class="${f===hoy?"hoy":""}">${LETRAS[desde+i]}<small>${d.getDate()}</small></th>`;
+  }).join("");
+
+  const filas = PUESTOS.map(p=>{
+    const opts = opcionesPara(p);
+    const celdas = dias.map(f=>{
+      const v = ((state.hist[f] || {})[state.turno] || {})[p] || "";
+      const suelta = (v && opts.indexOf(v) === -1) ? `<option value="${v}" selected>${corto[v] || v}</option>` : "";
+      const clases = (v ? "" : "vacia") + (rep[f+"|"+p] ? " rep" : "") + (f===hoy ? " hoy" : "");
+      return `<td class="${clases}">
+        <select data-f="${f}" data-rp="${p}">
+          <option value="">—</option>
+          ${suelta}
+          ${opts.map(o=> `<option value="${o}" ${o===v?"selected":""}>${corto[o] || o}</option>`).join("")}
+          <option value="__otro">\u270F\uFE0F Escribir…</option>
+        </select></td>`;
+    }).join("");
+    return `<tr class="${p==="Capataz"?"jefe-fila":""}"><th class="lado">${p}</th>${celdas}</tr>`;
+  }).join("");
+
+  rejillaEl.innerHTML = `<table class="rej ${dias.length < 4 ? "pocos" : ""}"><thead><tr><th class="lado"></th>${cab}</tr></thead><tbody>${filas}</tbody></table>`
+    + `<div class="pista">Turno ${state.turno}${dias.length > 3 ? " · desliza para ver el resto de la semana" : ""} · para un nombre que no esté, elige \u270F\uFE0F Escribir al final de la lista</div>`;
+  rejillaEl.scrollLeft = scroll;
+}
+rejillaEl.addEventListener("change", e=>{
+  const sel = e.target.closest("select[data-f]");
+  if(!sel) return;
+  if(sel.value === "__otro"){ escribirEnCelda(sel); return; }
+  asig(sel.dataset.f, state.turno)[sel.dataset.rp] = sel.value;
+  saveState(); render();
+});
+// Escribir un nombre a mano (los de ETT, un refuerzo...). Se queda apuntado
+// en la plantilla de la semana, así que luego sale ya en todas las casillas.
+function escribirEnCelda(sel){
+  const f = sel.dataset.f, p = sel.dataset.rp, td = sel.parentNode;
+  const actual = ((state.hist[f] || {})[state.turno] || {})[p] || "";
+  td.innerHTML = '<input class="cel-libre" type="text" placeholder="Nombre" autocomplete="off">';
+  const inp = td.querySelector("input");
+  inp.value = actual;
+  inp.focus();
+  if(inp.select) inp.select();
+  let cerrado = false;
+  const cerrar = guardar=>{
+    if(cerrado) return;
+    cerrado = true;
+    if(guardar){
+      const v = inp.value.trim().replace(/\s+/g," ");
+      asig(f, state.turno)[p] = v;
+      if(v){
+        apuntarEnPlantilla(v);
+      }
+      saveState();
+    }
+    render();
+  };
+  inp.addEventListener("blur", ()=> cerrar(true));
+  inp.addEventListener("keydown", ev=>{
+    if(ev.key === "Enter"){ ev.preventDefault(); cerrar(true); }
+    if(ev.key === "Escape"){ cerrar(false); }
+  });
+}
+
+// ---------- DÍAS GUARDADOS ----------
+function fechaBonita(f){
+  const d = new Date(f + "T00:00:00");
+  if(isNaN(d)) return f;
+  const dias = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+  return dias[d.getDay()] + " " + d.getDate() + "/" + (d.getMonth()+1) + "/" + d.getFullYear();
+}
+function llenos(f, t){
+  const A = (state.hist[f] || {})[t] || {};
+  return PUESTOS.filter(p=> (A[p] || "").trim()).length;
+}
+const cajaDiasEl = document.getElementById("cajaDias");
+const listaDiasEl = document.getElementById("listaDias");
+function renderDias(){
+  const dias = Object.keys(state.hist).filter(f=> f === state.fecha || hayAlgo(f)).sort().reverse();
+  listaDiasEl.innerHTML = dias.length
+    ? dias.map(f=>{
+        const resumen = TURNOS.map(t=>{
+          const n = llenos(f,t);
+          return t + " " + (n ? n + "/" + PUESTOS.length : "—");
+        }).join(" · ");
+        return `<div class="dia ${f===state.fecha?"hoy":""}">
+          <button class="abrir" data-dia="${f}">${fechaBonita(f)}${f===state.fecha?" · lo que estás viendo":""}
+            <span class="turnos-dia">${resumen}</span></button>
+          <button class="borrar" data-borrar="${f}" title="Borrar este día">&times;</button>
+        </div>`;
+      }).join("")
+    : `<div class="vacio">Todavía no hay días guardados.</div>`;
+}
+document.getElementById("verDias").addEventListener("click", ()=>{
+  const abierta = cajaDiasEl.classList.toggle("abierta");
+  document.getElementById("verDias").textContent = abierta ? "Ocultar días" : "Días guardados";
+  if(abierta) renderDias();
+});
+listaDiasEl.addEventListener("click", e=>{
+  const abrir = e.target.closest("[data-dia]");
+  if(abrir){
+    irASemana(abrir.dataset.dia);
+    window.scrollTo(0,0);
+    showToast("Semana del " + rotuloSemana(state.fecha));
+    return;
+  }
+  const bor = e.target.closest("[data-borrar]");
+  if(!bor) return;
+  const f = bor.dataset.borrar;
+  const copia = state.hist[f];
+  delete state.hist[f];
+  if(f === state.fecha) autoCapataz();
+  saveState(); render();
+  const t = document.getElementById("toast");
+  t.textContent = "Borrado " + fechaBonita(f) + " · TOCA PARA DESHACER";
+  t.classList.add("show"); t.style.pointerEvents = "auto";
+  t.onclick = ()=>{
+    t.onclick = null; t.style.pointerEvents = "none"; t.classList.remove("show");
+    state.hist[f] = copia; saveState(); render(); showToast("Recuperado");
+  };
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(()=>{
+    t.classList.remove("show"); t.style.pointerEvents = "none"; t.onclick = null;
+  }, 7000);
+});
+
+// ---------- RESUMEN POR OPERARIO ----------
+// Recorre todo lo guardado del año y cuenta en qué puestos ha estado cada uno.
+function todosLosNombres(){
+  const vistos = {}, fuera = [];
+  const mete = n=>{
+    const v = String(n || "").trim();
+    if(!v) return;
+    const k = sinTildes(v);
+    if(!vistos[k]){ vistos[k] = true; fuera.push(v); }
+  };
+  Object.keys(state.semanas).forEach(L=>
+    TURNOS.forEach(t=> (state.semanas[L].gente[t] || []).forEach(p=> mete(p.n))));
+  Object.keys(state.hist).forEach(f=>
+    TURNOS.forEach(t=> PUESTOS.forEach(p=> mete((state.hist[f][t] || {})[p]))));
+  return fuera.sort((a,b)=> a.localeCompare(b, "es"));
+}
+function historialDe(nombre){
+  const k = sinTildes(nombre);
+  const porPuesto = {}, porTurno = {}, dias = {}, lista = [];
+  Object.keys(state.hist).sort().forEach(f=>{
+    TURNOS.forEach(t=> PUESTOS.forEach(p=>{
+      if(sinTildes((state.hist[f][t] || {})[p]) !== k) return;
+      porPuesto[p] = (porPuesto[p] || 0) + 1;
+      porTurno[t] = (porTurno[t] || 0) + 1;
+      dias[f] = true;
+      lista.push({ f:f, t:t, p:p });
+    }));
+  });
+  return { porPuesto:porPuesto, porTurno:porTurno, dias:Object.keys(dias).length, lista:lista };
+}
+const fichaEl = document.getElementById("ficha");
+const quienEl = document.getElementById("quienFicha");
+function renderFicha(){
+  const quien = quienEl.value;
+  if(!quien){ fichaEl.innerHTML = '<div class="ficha-tot">Elige un operario arriba.</div>'; return; }
+  const h = historialDe(quien);
+  if(!h.dias){
+    fichaEl.innerHTML = '<div class="ficha-tot">Este año todavía no lo has puesto en ningún puesto.</div>';
+    return;
+  }
+  const puestos = PUESTOS.filter(p=> h.porPuesto[p]).sort((a,b)=> h.porPuesto[b] - h.porPuesto[a]);
+  const tope = h.porPuesto[puestos[0]];
+  const barras = puestos.map(p=>{
+    const n = h.porPuesto[p];
+    return `<div class="barra-p">
+      <div class="et"><span>${p}</span><span>${n} ${n === 1 ? "día" : "días"}</span></div>
+      <div class="tubo"><div class="relleno" style="width:${Math.round(n / tope * 100)}%"></div></div>
+    </div>`;
+  }).join("");
+  const turnos = TURNOS.filter(t=> h.porTurno[t])
+    .map(t=> "Turno " + t + ": " + h.porTurno[t]).join(" · ");
+  const ultimos = h.lista.slice(-8).reverse().map(x=>
+    `<div><span>${x.p} <span class="f">· turno ${x.t}</span></span><span class="f">${fechaBonita(x.f)}</span></div>`).join("");
+  fichaEl.innerHTML =
+    `<div class="ficha-tot"><b>${h.dias} ${h.dias === 1 ? "día" : "días"}</b> en ${puestos.length}
+       ${puestos.length === 1 ? "puesto distinto" : "puestos distintos"}<br>${turnos}</div>` +
+    barras +
+    `<div class="ficha-sub">Últimas veces</div><div class="ultimos">${ultimos}</div>`;
+}
+function renderQuien(){
+  const guardado = quienEl.value;
+  const nombres = todosLosNombres();
+  quienEl.innerHTML = '<option value="">— elige un operario —</option>' +
+    nombres.map(n=> `<option value="${n}" ${n === guardado ? "selected" : ""}>${n}</option>`).join("");
+  renderFicha();
+}
+quienEl.addEventListener("change", renderFicha);
+document.getElementById("verFicha").addEventListener("click", ()=>{
+  const caja = document.getElementById("cajaFicha");
+  const abierta = caja.classList.toggle("abierta");
+  document.getElementById("verFicha").textContent = abierta ? "Ocultar resumen" : "Resumen por operario";
+  if(abierta) renderQuien();
+});
+
+// ---------- LISTA DE OPERARIOS ----------
+const cajaEl = document.getElementById("cajaOperarios");
+const listaEl = document.getElementById("listaOperarios");
+function renderOperarios(){
+  const sem = semanaDe(state.fecha);
+  document.getElementById("tituloLista").textContent =
+    "Turno " + state.turno + " · CHAPA" + (sem && sem.kw ? " · " + sem.kw : "");
+  // capataz arriba, debajo la oficina y luego los carretilleros
+  const g = gente().map((o,i)=> ({ o:o, i:i })).sort((a,b)=> ordenPlantilla(a.o, b.o) || a.i - b.i);
+  listaEl.innerHTML = g.length
+    ? g.map(x=> `<div class="ope"><span>${x.o.n}</span><span class="cat ${esCapataz(x.o)?"jefe-cat":""}">${categoria(x.o)}</span><button data-quitar="${x.i}" title="Quitar">&times;</button></div>`).join("")
+    : `<div class="ope"><span style="color:var(--text-dim)">No hay nadie en este turno</span></div>`;
+}
+document.getElementById("verOperarios").addEventListener("click", ()=>{
+  const abierta = cajaEl.classList.toggle("abierta");
+  document.getElementById("verOperarios").textContent = abierta ? "Ocultar operarios" : "Operarios del turno";
+  if(abierta) renderOperarios();
+});
+listaEl.addEventListener("click", e=>{
+  const b = e.target.closest("[data-quitar]");
+  if(!b) return;
+  const i = parseInt(b.dataset.quitar,10);
+  const lista = semanaEditable().gente[state.turno] || [];
+  const quien = lista[i];
+  if(!quien) return;
+  lista.splice(i,1);
+  saveState(); render();
+  showToast("Quitado " + quien.n);
+});
+function anadirOperario(){
+  const inp = document.getElementById("nuevoOperario");
+  const v = inp.value.trim().replace(/\s+/g," ");
+  if(!v) return;
+  const sem = semanaEditable();
+  const lista = sem.gente[state.turno] || (sem.gente[state.turno] = []);
+  if(lista.some(o=> sinTildes(o.n) === sinTildes(v))){ showToast("Ese nombre ya está en el turno"); return; }
+  apuntarEnPlantilla(v);
+  inp.value = "";
+  saveState(); render();
+  showToast("Añadido " + v + " al turno " + state.turno);
+}
+document.getElementById("btnAnadir").addEventListener("click", anadirOperario);
+document.getElementById("nuevoOperario").addEventListener("keydown", e=>{ if(e.key === "Enter") anadirOperario(); });
+
+// ---------- CARGAR EL EXCEL DE LA SEMANA ----------
+// Localiza las cabeceras "TURNO A/B/C", y dentro de cada bloque las columnas
+// de nombre, categoría y nave. Se queda con las filas cuya nave sea CHAPA.
+function leerTurnos(filas){
+  const bloques = [];
+  for(let r = 0; r < Math.min(filas.length, 30) && !bloques.length; r++){
+    (filas[r] || []).forEach((v,c)=>{
+      const m = sinTildes(v).replace(/\s+/g,"").match(/^TURNO(FS|[ABC])$/);
+      if(m) bloques.push({ turno:m[1], col:c, fila:r });
+    });
+  }
+  if(!bloques.length) throw new Error('No encuentro ninguna cabecera "TURNO A/B/C"');
+  bloques.sort((a,b)=> a.col - b.col);
+  let ancho = 0;
+  filas.forEach(f=>{ if(f && f.length > ancho) ancho = f.length; });
+  bloques.forEach((b,i)=>{ b.fin = (i+1 < bloques.length) ? bloques[i+1].col : ancho; });
+
+  const fuera = {}, sin = {}, horario = {};
+  bloques.forEach(b=>{
+    for(let c = b.col; c < Math.min((filas[b.fila] || []).length, b.fin); c++){
+      const h = normHorario((filas[b.fila] || [])[c]);
+      if(h){ horario[b.turno] = h; break; }
+    }
+    let sinNombre = 0;
+    let cNom = -1, cCat = -1, cNave = -1, fCab = -1;
+    for(let r = b.fila; r < Math.min(b.fila + 4, filas.length); r++){
+      const fila = filas[r] || [];
+      for(let c = b.col; c < Math.min(fila.length, b.fin); c++){
+        const v = sinTildes(fila[c]);
+        if(v === "NOMBRE" && cNom === -1){ cNom = c; fCab = r; }
+        if(v === "CATEGORIA" && cCat === -1) cCat = c;
+        if(v === "NAVE" && cNave === -1) cNave = c;
+      }
+      if(cNom !== -1) break;
+    }
+    if(cNom === -1) return;
+    // La columna de la nave suele venir sin cabecera: la buscamos por lo que
+    // contiene, que es la que más veces diga CHAPA, Schnellecke, NAVE C...
+    if(cNave === -1){
+      const NAVES = ["CHAPA","SCHNELLECKE","NAVEC","MONTAJE"];
+      let mejor = -1, mejorN = 0;
+      for(let c = cNom + 1; c < b.fin; c++){
+        let n = 0;
+        for(let r = fCab + 1; r < filas.length; r++){
+          const v = sinTildes((filas[r] || [])[c]).replace(/[^A-Z]/g,"");
+          if(NAVES.some(x=> v.indexOf(x) === 0)) n++;
+        }
+        if(n > mejorN){ mejorN = n; mejor = c; }
+      }
+      if(mejorN >= 3) cNave = mejor;
+    }
+    if(cNave === -1) return;
+
+    const lista = [];
+    for(let r = fCab + 1; r < filas.length; r++){
+      const fila = filas[r] || [];
+      // abajo vienen los totales, donde también pone CHAPA: ahí se acaba
+      const esTotales = fila.some(v=>{
+        const t = sinTildes(v).replace(/\s+/g,"");
+        return t === "PERSONALACTIVO" || t === "TOTALPLANTILLA";
+      });
+      if(esTotales) break;
+      if(sinTildes(fila[cNave]) !== "CHAPA") continue;
+      const bruto = String(fila[cNom] == null ? "" : fila[cNom]).trim();
+      if(!bruto){ sinNombre++; continue; }
+      const n = darLaVuelta(bruto);
+      const c = cCat === -1 ? "" : String(fila[cCat] == null ? "" : fila[cCat]).trim();
+      if(!lista.some(x=> sinTildes(x.n) === sinTildes(n))) lista.push({ n:n, c:c });
+    }
+    if(lista.length){ fuera[b.turno] = lista; sin[b.turno] = sinNombre; }
+  });
+  if(!Object.keys(fuera).length) throw new Error("No he encontrado a nadie de CHAPA");
+  return Object.assign({ turnos: fuera, sin: sin, horario: horario }, leerSemana(filas));
+}
+
+// Las fechas del Excel pueden venir como fecha de verdad, como número de
+// Excel o escritas a mano tipo 02/11/2026.
+function aISO(v){
+  if(v == null || v === "") return "";
+  const p = n=> String(n).padStart(2,"0");
+  const sale = d=> isNaN(d) ? "" : d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate());
+  if(v && typeof v.getFullYear === "function") return sale(v);   // ya es una fecha
+  if(typeof v === "number" && v > 20000 && v < 80000){
+    return sale(new Date(Date.UTC(1899,11,30 + Math.floor(v))));
+  }
+  const t = String(v).trim();
+  if(/^\d{4}-\d{2}-\d{2}T/.test(t)){            // fecha con hora
+    const z = new Date(t);
+    if(!isNaN(z)) return sale(z);
+  }
+  let m = t.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+  if(m){
+    const a = m[3].length === 2 ? "20" + m[3] : m[3];
+    return a + "-" + p(+m[2]) + "-" + p(+m[1]);
+  }
+  m = t.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? m[0] : "";
+}
+// "Semana | KW45" y debajo "LUNES | fecha" / "DOMINGO | fecha"
+function leerSemana(filas){
+  let kw = "", desde = "", hasta = "";
+  for(let r = 0; r < Math.min(filas.length, 12); r++){
+    const fila = filas[r] || [];
+    for(let c = 0; c < fila.length; c++){
+      const v = sinTildes(fila[c]);
+      const sig = fila[c+1];
+      if(v === "SEMANA" && !kw && sig) kw = String(sig).trim();
+      if(v === "LUNES"   && !desde) desde = aISO(sig);
+      if(v === "DOMINGO" && !hasta) hasta = aISO(sig);
+      if(!kw){
+        const m = String(fila[c] == null ? "" : fila[c]).trim().match(/^KW\s?(\d{1,2})$/i);
+        if(m) kw = "KW" + m[1];
+      }
+    }
+  }
+  return { kw: kw, desde: desde, hasta: hasta };
+}
+
+function cargarSheetJS(){
+  return new Promise((ok, mal)=>{
+    if(window.XLSX) return ok();
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    s.onload = ()=> ok();
+    s.onerror = ()=> mal(new Error("sin conexión"));
+    document.head.appendChild(s);
+  });
+}
+
+document.getElementById("ficheroExcel").addEventListener("change", async (e)=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  showToast("Leyendo el Excel…");
+  try{ await cargarSheetJS(); }
+  catch(err){
+    showToast("Hace falta internet la primera vez para leer Excel · añade los nombres a mano");
+    e.target.value = ""; return;
+  }
+  try{
+    const buf = await f.arrayBuffer();
+    const wb = XLSX.read(buf, { type:"array" });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const filas = XLSX.utils.sheet_to_json(ws, { header:1, blankrows:true, defval:"" });
+    const r = leerTurnos(filas);
+    const lunes = r.desde ? lunesDe(r.desde) : lunesDe(state.fecha);
+    const g = vacioPorTurno();
+    const resumen = [];
+    TURNOS.forEach(t=>{
+      g[t] = r.turnos[t] || [];
+      if(r.turnos[t]){
+        const s = r.sin[t] || 0;
+        resumen.push("Turno " + t + ": " + r.turnos[t].length + (s ? " (+" + s + " sin nombre)" : ""));
+      }
+    });
+    if(!g.FS || !g.FS.length) g.FS = mezclaTurnos(g);
+    state.semanas[lunes] = { kw:r.kw || "", desde:r.desde || lunes, hasta:r.hasta || "",
+                             horario: r.horario || {}, gente:g };
+    // los días de esa semana se quedan limpios; los de otras semanas no se tocan
+    Object.keys(state.hist).forEach(f=>{ if(lunesDe(f) === lunes) delete state.hist[f]; });
+    Object.keys(state.auto).forEach(k=>{ if(lunesDe(k.split("|")[0]) === lunes) delete state.auto[k]; });
+    autoCapataz();
+    saveState(); render();
+    showToast("Cargado " + (r.kw || "la semana") + " · " + resumen.join(" · "));
+  }catch(err){
+    showToast("No he podido leer ese Excel: " + (err && err.message ? err.message : "formato raro"));
+  }
+  e.target.value = "";
+});
+
+// ---------- VACIAR ----------
+let armado = false, armadoT = null;
+const vaciarBtn = document.getElementById("vaciarBtn");
+vaciarBtn.addEventListener("click", ()=>{
+  if(!armado){
+    armado = true;
+    vaciarBtn.textContent = "⚠️";
+    armadoT = setTimeout(()=>{ armado = false; vaciarBtn.textContent = "\u{1F5D1}"; }, 3000);
+    showToast("Toca otra vez para vaciar toda la semana del turno " + state.turno);
+    return;
+  }
+  clearTimeout(armadoT);
+  armado = false;
+  vaciarBtn.textContent = "\u{1F5D1}";
+  const turno = state.turno;
+  // en la vista de semana se vacían los siete días; en la de día, solo ese
+  const fechas = diasVisibles();
+  const copias = {};
+  fechas.forEach(f=>{
+    copias[f] = Object.assign({}, asig(f, turno));
+    dia(f)[turno] = {};
+    autoCapatazDe(f, turno, true);
+  });
+  saveState(); render();
+  const t = document.getElementById("toast");
+  t.textContent = "Semana del turno " + turno + " vaciada · TOCA PARA DESHACER";
+  t.classList.add("show");
+  t.style.pointerEvents = "auto";
+  t.onclick = ()=>{
+    t.onclick = null; t.style.pointerEvents = "none"; t.classList.remove("show");
+    fechas.forEach(f=>{ dia(f)[turno] = copias[f]; });
+    saveState(); render(); showToast("Recuperado");
+  };
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(()=>{
+    t.classList.remove("show"); t.style.pointerEvents = "none"; t.onclick = null;
+  }, 7000);
+});
+
+// ---------- ARRANQUE ----------
+loadState();
+state.fecha = lunesDe(fechaHoy());   // al abrir, la semana en curso
+autoCapataz();
+const fechaEl = document.getElementById("fecha");
+fechaEl.value = state.fecha;
+fechaEl.addEventListener("change", ()=> irASemana(fechaEl.value || fechaHoy()));
+render();
+saveState();
+avisarSemanaAnterior();
+</script>
+</body>
+</html>
